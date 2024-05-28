@@ -12,11 +12,9 @@ import argparse
 def train(experiment: Experiment):
     params = experiment.config
 
-
     env = CarRacingEnv()
     agent = ConvNetAgent(env, params.buffer_size, params.lr)
     epsilon = params.epsilon
-
     for episode in tqdm(range(params.n_episodes)):
         state = env.reset()
         done = False
@@ -36,10 +34,11 @@ def train(experiment: Experiment):
 
         mlflow.log_metric("reward", episode_reward, episode)
         mlflow.log_metric("epsilon", epsilon, episode)
-        experiment.save_checkpoint(agent.policy_net, f"checkpoint_{episode}.pth")
+        experiment.save_checkpoint(
+            agent.policy_net, f"checkpoint_{episode}.pth")
         agent.update_target_net()
         epsilon = max(params.min_epsilon,
-                    epsilon * params.epsilon_decay)
+                      epsilon * params.epsilon_decay)
         if episode % 10 == 0:
             print(
                 f"Episode: {episode}, Reward: {episode_reward}, Epsilon: {epsilon}")
