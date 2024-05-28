@@ -1,0 +1,8 @@
+buffer_size: 10000
+lr: 0.001
+n_episodes: 100
+epsilon: 1
+epsilon_decay: 0.995
+min_epsilon: 0.01
+gamma: 0.99
+batch_size: 32

@@ -1,0 +1,8 @@
+gymnasium[box2d]
+numpy
+torch
+matplotlib
+jupyter
+python-dotenv
+mlflow
+dotmap
