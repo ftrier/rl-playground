@@ -23,6 +23,13 @@ class Experiment:
             os.makedirs(os.path.join(self.experiment_dir, folder))
         print(f"Created: {self.experiment_dir}")
 
+    def __enter__(self):
+        mlflow.start_run()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        mlflow.end_run()
+
     def load_config(self, config_file):
         raw_config = yaml.safe_load(Path(config_file).read_text())
         self.config = DotMap(raw_config)

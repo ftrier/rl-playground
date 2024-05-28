@@ -1,12 +1,10 @@
 import numpy as np
+from tqdm import tqdm
+import mlflow
+import argparse
 from src.rl.agent.conv_net_agent import ConvNetAgent
 from src.rl.utils.car_racing_env import CarRacingEnv
 from src.rl.utils.experiment import Experiment
-from tqdm import tqdm
-import mlflow
-from dotenv import dotenv_values
-import mlflow
-import argparse
 
 
 def train(experiment: Experiment):
@@ -40,14 +38,11 @@ def train(experiment: Experiment):
         epsilon = max(params.min_epsilon,
                       epsilon * params.epsilon_decay)
         if episode % 10 == 0:
-            print(
-                f"Episode: {episode}, Reward: {episode_reward}, Epsilon: {epsilon}")
+            print(f"Ep: {episode}, Reward: {episode_reward}, Epsilon: {epsilon}")
 
 
 def params():
     parser = argparse.ArgumentParser(description='CarRacing')
-    parser.add_argument('-r', '--resume', type=bool,
-                        default=False, help='resume training')
     parser.add_argument('-c', '--config', type=str,
                         default="configs/train.yaml", help='config file')
     return parser.parse_args()
@@ -55,8 +50,7 @@ def params():
 
 if __name__ == "__main__":
     cmd_params = params()
-    with mlflow.start_run() as run:
-        experiment = Experiment("CarRacing")
-        experiment.load_config(cmd_params.config)
-        experiment.save_configs()
-        train(experiment)
+    with Experiment("CarRacing") as exp:
+        exp.load_config(cmd_params.config)
+        exp.save_configs()
+        train(exp)

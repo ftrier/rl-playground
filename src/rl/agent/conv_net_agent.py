@@ -1,4 +1,3 @@
-from gymnasium.spaces import Box
 from src.rl.networks.conv_net import ConvNet
 from src.rl.agent.buffer import ReplayBuffer
 import torch
@@ -64,17 +63,3 @@ class ConvNetAgent:
 
     def update_target_net(self):
         self.target_net.load_state_dict(self.policy_net.state_dict())
-
-    def get_n_actions(self):
-        # Check if Box or Discrete, then return the action space size (n_actions)
-        if isinstance(self.env.action_space, Box):
-            return self.env.action_space.shape[0]
-        else:
-            return self.env.action_space.n
-
-    def get_max_actions(self):
-        # Check if Box or Discrete, then return the max_action value for the actor network
-        if isinstance(self.env.action_space, Box):
-            return self.env.action_space.high
-        else:
-            raise NotImplementedError

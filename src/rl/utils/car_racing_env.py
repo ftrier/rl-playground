@@ -8,7 +8,8 @@ class CarRacingEnv(gym.Wrapper):
         self.stacked_frames = []
 
     def _preprocess(self, s):
-        s = s[::2, ::2].mean(axis=2)
+        s = s[0:84, :, :].mean(axis=2)
+        s = s[::2, ::2]
         return s
 
     @property
@@ -17,7 +18,7 @@ class CarRacingEnv(gym.Wrapper):
 
     @property
     def observation_space(self):
-        return gym.spaces.Box(0.0, 1.0, (4, 48, 48), dtype=np.float32)
+        return gym.spaces.Box(0.0, 1.0, (4, 42, 48), dtype=np.float32)
 
     def reset(self):
         s, info = self.env.reset()
