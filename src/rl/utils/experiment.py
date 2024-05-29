@@ -38,7 +38,7 @@ class Experiment:
     def save_configs(self, config_file="train.yaml"):
         experiment_configs = os.path.join(self.experiment_dir, "configs")
         with open(os.path.join(experiment_configs, config_file), "w") as f:
-            yaml.dump(self.config, f)
+            yaml.dump(self.config.toDict(), f)
 
     def save_checkpoint(self, model, checkpoint_name):
         checkpoint_dir = os.path.join(self.experiment_dir, "checkpoints")
