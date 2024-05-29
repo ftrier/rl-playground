@@ -6,3 +6,4 @@ jupyter
 python-dotenv
 mlflow
 dotmap
+torchrl

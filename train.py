@@ -21,13 +21,12 @@ def train(experiment: Experiment):
         while not done:
             action = agent.act(state, epsilon)
             next_state, reward, done, truncated, _ = env.step(action)
-            if done or truncated:
-                next_state = None
-            agent.memorize((state, action, reward, next_state))
+            if not done and not truncated:
+                agent.memorize(state, action, reward, next_state)
             agent.train(params.batch_size, params.gamma)
             state = next_state
             episode_reward += reward
-            if next_state is None:
+            if done or truncated:
                 break
 
         mlflow.log_metric("reward", episode_reward, episode)
