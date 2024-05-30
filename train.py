@@ -8,12 +8,12 @@ from src.rl.utils.experiment import Experiment
 
 
 def train(experiment: Experiment):
-    params = experiment.config
+    params = experiment.params
 
     env = CarRacingEnv()
     agent = ConvNetAgent(env, params.buffer_size, params.lr)
     epsilon = params.epsilon
-    for episode in tqdm(range(params.n_episodes)):
+    for episode in tqdm(experiment.range()):
         state = env.reset()
         done = False
         episode_reward = 0
@@ -29,10 +29,8 @@ def train(experiment: Experiment):
             if done or truncated:
                 break
 
-        mlflow.log_metric("reward", episode_reward, episode)
-        mlflow.log_metric("epsilon", epsilon, episode)
         experiment.save_checkpoint(
-            agent.policy_net, f"checkpoint_{episode}.pth")
+            agent.policy_net, episode, reward=episode_reward, epsilon=epsilon)
         agent.update_target_net()
         epsilon = max(params.min_epsilon,
                       epsilon * params.epsilon_decay)
@@ -42,14 +40,15 @@ def train(experiment: Experiment):
 
 def params():
     parser = argparse.ArgumentParser(description='CarRacing')
-    parser.add_argument('-c', '--config', type=str,
-                        default="configs/train.yaml", help='config file')
+    parser.add_argument('-p', '--params', type=str,
+                        default="configs/train.yaml", help='params file')
+    parser.add_argument('-e', '--experiment', type=str,
+                        help='folder of the experiment')
     return parser.parse_args()
 
 
 if __name__ == "__main__":
-    cmd_params = params()
-    with Experiment("CarRacing") as exp:
-        exp.load_config(cmd_params.config)
-        exp.save_configs()
+    p = params()
+
+    with Experiment(param_file=p.params) as exp:
         train(exp)

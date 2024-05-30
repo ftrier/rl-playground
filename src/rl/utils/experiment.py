@@ -6,40 +6,58 @@ from pathlib import Path
 import mlflow
 import torch
 
+
 class Experiment:
-    def __init__(self, experiment_name="experiment") -> None:
-        mlflow.set_experiment(experiment_name)
-        self.timestamp = time.strftime("_%m-%d_%H-%M-%S%f")[:-2]
-        self.experiments_dir = "experiments"
+    def __init__(self, param_file: str) -> None:
+        self.running_params = DotMap()
+        self.params = self._load_params(param_file)
+        mlflow.set_experiment(self.params.experiment_name)
 
-        if not os.path.exists(self.experiments_dir):
-            os.makedirs(self.experiments_dir)
+        if not self.params.dir:
+            t = time.strftime("_%m-%d_%H-%M-%S%f")[:-2]
+            timed_name = self.params.experiment_name + t
+            self.params.dir = os.path.join("experiments", timed_name)
+            os.makedirs(os.path.join(self.params.dir,
+                        "checkpoints"), exist_ok=True)
 
-        self.experiment_name = experiment_name + self.timestamp
-        self.experiment_dir = os.path.join(
-            self.experiments_dir, self.experiment_name)
+        if os.path.exists(os.path.join(self.params.dir, "running_params.yaml")):
+            self.running_params = self._load_params(
+                os.path.join(self.params.dir, "running_params.yaml"))
 
-        for folder in ["plots", "checkpoints", "configs", "rendering", "episodes"]:
-            os.makedirs(os.path.join(self.experiment_dir, folder))
-        print(f"Created: {self.experiment_dir}")
+        if not self.running_params.last_episode:
+            self.running_params.last_episode = -1
+        self.running_params.last_episode += 1
+
+    def range(self):
+        return range(int(self.running_params.last_episode), self.params.n_episodes)
 
     def __enter__(self):
-        mlflow.start_run()
+        mlflow.start_run(
+            run_id=self.params.run_id if self.params.run_id else None)
+        self.params.run_id = mlflow.active_run().info.run_id
+        self._save_params('params.yaml')
+        mlflow.log_params(self.params)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         mlflow.end_run()
 
-    def load_config(self, config_file):
-        raw_config = yaml.safe_load(Path(config_file).read_text())
-        self.config = DotMap(raw_config)
-        mlflow.log_params(self.config)
+    def _load_params(self, param_file: str):
+        return DotMap(yaml.safe_load(Path(param_file).read_text()))
 
-    def save_configs(self, config_file="train.yaml"):
-        experiment_configs = os.path.join(self.experiment_dir, "configs")
-        with open(os.path.join(experiment_configs, config_file), "w") as f:
-            yaml.dump(self.config.toDict(), f)
+    def _save_params(self, param_file):
+        with open(os.path.join(self.params.dir, param_file), "w") as f:
+            yaml.dump(self.params.toDict(), f)
 
-    def save_checkpoint(self, model, checkpoint_name):
-        checkpoint_dir = os.path.join(self.experiment_dir, "checkpoints")
-        torch.save(model.state_dict(), os.path.join(checkpoint_dir, checkpoint_name))
+    def _save_running_params(self, param_file):
+        with open(os.path.join(self.params.dir, param_file), "w") as f:
+            yaml.dump(self.running_params.toDict(), f)
+
+    def save_checkpoint(self, model, episode, **kwargs):
+        checkpoint_dir = os.path.join(self.params.dir, "checkpoints")
+        self.running_params.last_episode = episode
+        self._save_running_params('running_params.yaml')
+        torch.save(model.state_dict(), os.path.join(
+            checkpoint_dir, str(episode) + ".pth"))
+        for k, v in kwargs.items():
+            mlflow.log_metric(k, v, episode)
