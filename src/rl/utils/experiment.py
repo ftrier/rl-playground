@@ -20,12 +20,16 @@ class Experiment:
             os.makedirs(os.path.join(self.params.dir,
                         "checkpoints"), exist_ok=True)
 
+        # params cannot be overwritten in mlflow, therefore we are using running params as well
         if os.path.exists(os.path.join(self.params.dir, "running_params.yaml")):
             self.running_params = self._load_params(
                 os.path.join(self.params.dir, "running_params.yaml"))
 
         if not self.running_params.last_episode:
             self.running_params.last_episode = -1
+        ckp = os.path.join(self.params.dir, 'checkpoints', str(
+            self.running_params.last_episode) + ".pth")
+        self.ckp = torch.load(ckp) if os.path.exists(ckp) else None
         self.running_params.last_episode += 1
 
     def range(self):
