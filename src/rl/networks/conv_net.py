@@ -3,6 +3,7 @@ import torch.nn.functional as F
 
 registry = {}
 
+
 class ConvNetInterface(nn.Module):
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -22,7 +23,6 @@ class ConvNet(ConvNetInterface):
         x = x.view((-1, 384))
         x = self.fc1(x)
         return x
-
 
 
 class ConvNetv2(ConvNetInterface):

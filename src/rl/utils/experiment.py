@@ -15,9 +15,7 @@ class Experiment:
         if use_mlflow:
             config = dotenv_values(".env")
             mlflow.set_tracking_uri(uri=config['URL_MLFLOW'])
-            print("MLflow is now using", mlflow.get_tracking_uri())
-        else:
-            print("Not using mlflow")
+        print("Experiment: is using mlflow at:", mlflow.get_tracking_uri())
 
         mlflow.set_experiment(self.params.experiment_name)
 
@@ -27,6 +25,7 @@ class Experiment:
             self.params.dir = os.path.join("experiments", timed_name)
             os.makedirs(os.path.join(self.params.dir,
                         "checkpoints"), exist_ok=True)
+            print("Experiment: created directory at", self.params.dir)
 
         # params cannot be overwritten in mlflow, therefore we are using running params as well
         if os.path.exists(os.path.join(self.params.dir, "running_params.yaml")):

@@ -11,12 +11,8 @@ def train(experiment: Experiment):
     params = experiment.params
 
     env = CarRacingEnv()
-    agent = ConvNetAgent(env, params)
-
-    if experiment.ckp:
-        agent.policy_net.load_state_dict(experiment.ckp)
-        agent.target_net.load_state_dict(experiment.ckp)
-        print("Loaded checkpoint")
+    agent = ConvNetAgent(env, params.network,
+                         params.buffer_size, params.lr, experiment.ckp)
 
     epsilon = params.epsilon
     for episode in tqdm(experiment.range()):
