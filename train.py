@@ -11,7 +11,7 @@ def train(experiment: Experiment):
     params = experiment.params
 
     env = CarRacingEnv()
-    agent = ConvNetAgent(env, params.buffer_size, params.lr)
+    agent = ConvNetAgent(env, params)
 
     if experiment.ckp:
         agent.policy_net.load_state_dict(experiment.ckp)
@@ -50,11 +50,13 @@ def params():
                         default="configs/train.yaml", help='params file')
     parser.add_argument('-e', '--experiment', type=str,
                         help='folder of the experiment')
+    parser.add_argument('-u', '--use_mlflow', action='store_true', default=False,
+                        help='whether to use mlflow or not')
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     p = params()
 
-    with Experiment(param_file=p.params) as exp:
+    with Experiment(param_file=p.params, use_mlflow=p.use_mlflow) as exp:
         train(exp)

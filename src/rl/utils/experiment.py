@@ -5,12 +5,20 @@ from dotmap import DotMap
 from pathlib import Path
 import mlflow
 import torch
+from dotenv import dotenv_values
 
 
 class Experiment:
-    def __init__(self, param_file: str) -> None:
+    def __init__(self, param_file: str, use_mlflow: bool = True) -> None:
         self.running_params = DotMap()
         self.params = self._load_params(param_file)
+        if use_mlflow:
+            config = dotenv_values(".env")
+            mlflow.set_tracking_uri(uri=config['URL_MLFLOW'])
+            print("MLflow is now using", mlflow.get_tracking_uri())
+        else:
+            print("Not using mlflow")
+
         mlflow.set_experiment(self.params.experiment_name)
 
         if not self.params.dir:
@@ -38,7 +46,11 @@ class Experiment:
     def __enter__(self):
         mlflow.start_run(
             run_id=self.params.run_id if self.params.run_id else None)
-        self.params.run_id = mlflow.active_run().info.run_id
+
+        active_run = mlflow.active_run()
+        if active_run:
+            self.params.run_id = active_run.info.run_id
+
         self._save_params('params.yaml')
         mlflow.log_params(self.params)
         return self

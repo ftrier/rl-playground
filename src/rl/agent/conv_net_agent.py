@@ -1,5 +1,5 @@
 import numpy as np
-from src.rl.networks.conv_net import ConvNet
+import src.rl.networks.conv_net as conv_net
 import torch
 import torch.nn.functional as F
 from torchrl.data import TensorDictReplayBuffer, LazyTensorStorage
@@ -7,17 +7,18 @@ from tensordict import TensorDict
 
 
 class ConvNetAgent:
-    def __init__(self, env, buffer_size, lr):
+    def __init__(self, env, params):
         self.env = env
         self.device = torch.device('mps')
-        self.policy_net = ConvNet(
-            self.env.observation_space.shape[0], self.env.action_space.n, 0.001).to(self.device)
-        self.target_net = ConvNet(
-            self.env.observation_space.shape[0], self.env.action_space.n, 0.001).to(self.device)
+        self.policy_net = conv_net.registry[params.network](
+            self.env.observation_space.shape[0], self.env.action_space.n).to(self.device)
+        self.target_net = conv_net.registry[params.network](
+            self.env.observation_space.shape[0], self.env.action_space.n).to(self.device)
         self.target_net.load_state_dict(self.policy_net.state_dict())
-        self.optimizer = torch.optim.Adam(self.policy_net.parameters(), lr=lr)
+        self.optimizer = torch.optim.Adam(
+            self.policy_net.parameters(), lr=params.lr)
         self.memory = TensorDictReplayBuffer(storage=LazyTensorStorage(
-            buffer_size), collate_fn=lambda x: x)
+            params.buffer_size), collate_fn=lambda x: x)
 
     @torch.no_grad()
     def act(self, state, epsilon):
