@@ -7,3 +7,5 @@ python-dotenv
 mlflow
 dotmap
 torchrl
+imageio
+tqdm
