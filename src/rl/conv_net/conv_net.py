@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from src.rl.utils import Device
 
+
 class ConvNet(nn.Module):
     def __init__(self, state_dim, action_dim):
         super().__init__()

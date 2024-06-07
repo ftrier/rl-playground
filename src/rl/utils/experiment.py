@@ -13,9 +13,11 @@ def Load_params(param_file: str) -> DotMap:
         return DotMap()
     return DotMap(yaml.safe_load(Path(param_file).read_text()))
 
+
 def save_params(param_file: str, values: DotMap):
     with open(param_file, "w") as f:
         yaml.dump(values.toDict(), f)
+
 
 class Experiment:
     def __init__(self, param_file: str, use_mlflow: bool = True) -> None:
@@ -25,7 +27,7 @@ class Experiment:
         if use_mlflow:
             config = dotenv_values(".env")
             mlflow.set_tracking_uri(uri=config['URL_MLFLOW'])
-        print("Experiment: is using mlflow at:", mlflow.get_tracking_uri())
+        print("Experiment mlflow:", mlflow.get_tracking_uri())
         mlflow.set_experiment(self.params.experiment_name)
 
         if not self.params.dir:
@@ -41,7 +43,7 @@ class Experiment:
             "running": os.path.join(self.p['base'], "running.yaml"),
             "checkpoints": os.path.join(self.p['base'], "checkpoints"),
             "best_weight": os.path.join(self.p['base'], "checkpoints", "best.pth"),
-            "episode_weight": lambda e: os.path.join(self.p['base'], "checkpoints", str(e) + ".pth"),
+            "last_weight": os.path.join(self.p['base'], "checkpoints", "last.pth"),
         }
         os.makedirs(self.p['checkpoints'], exist_ok=True)
 
@@ -51,7 +53,7 @@ class Experiment:
             self.running.last_ep = -1
 
         self.checkpoint = None
-        weights = self.p['episode_weight'](self.running.last_ep)
+        weights = self.p['last_weight']
         if os.path.exists(weights):
             self.checkpoint = torch.load(weights)
 
@@ -77,7 +79,7 @@ class Experiment:
         mlflow.end_run()
 
     def save(self, model, episode, **kwargs):
-        torch.save(model.state_dict(), self.p["episode_weight"](episode))
+        torch.save(model.state_dict(), self.p["last_weight"])
 
         if kwargs.get('reward', 0) > self.running.best_reward:
             self.running.best_reward = kwargs['reward']
