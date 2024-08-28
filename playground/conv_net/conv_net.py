@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from src.rl.utils import Device
+from playground.utils import Device
 
 
 class ConvNet(nn.Module):
@@ -21,6 +21,7 @@ class ConvNet(nn.Module):
         x = self.fc2(x)
         return x
 
+    @torch.no_grad()
     def predict(self, x):
         x = torch.tensor(x, dtype=torch.float32).to(Device)
         return self(x).argmax().item()

@@ -3,8 +3,8 @@ import torch
 import torch.nn.functional as F
 from torchrl.data import TensorDictReplayBuffer, LazyTensorStorage
 from tensordict import TensorDict
-from src.rl.utils import Device
-from src.rl.conv_net.conv_net import ConvNet
+from playground.utils import Device
+from playground.conv_net.conv_net import ConvNet
 
 
 class ConvNetAgent:
